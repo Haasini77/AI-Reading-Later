@@ -5,6 +5,7 @@ import requests
 import json
 import os
 
+
 # ==========================================
 # CREATE FLASK APP
 # ==========================================
@@ -12,12 +13,17 @@ import os
 app = Flask(__name__)
 CORS(app)
 
+
 # ==========================================
-# OLLAMA SETUP
+# GROQ AI SETUP
 # ==========================================
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-OLLAMA_MODEL = "llama3.2"
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+
+GROQ_MODEL = "llama-3.3-70b-versatile"
+
 
 # ==========================================
 # DATABASE
@@ -38,6 +44,7 @@ def get_db_connection():
 # ==========================================
 
 def init_db():
+
     connection = get_db_connection()
 
     connection.execute("""
@@ -56,8 +63,9 @@ def init_db():
 
 
 # IMPORTANT:
-# Run database initialization when the Flask
+# Run database initialization when Flask
 # application is imported by Gunicorn/Render.
+
 init_db()
 
 
@@ -67,9 +75,10 @@ init_db()
 
 @app.route("/")
 def home():
+
     return jsonify({
         "message": "AI Reading Later Backend is Running! 🚀",
-        "ai": "Ollama + Llama 3.2"
+        "ai": "Groq + Llama 3.3"
     })
 
 
@@ -93,6 +102,7 @@ def get_articles():
         result = []
 
         for article in articles:
+
             result.append({
                 "id": article["id"],
                 "title": article["title"],
@@ -123,6 +133,7 @@ def save_article():
         data = request.get_json()
 
         if not data:
+
             return jsonify({
                 "error": "No data received"
             }), 400
@@ -131,6 +142,7 @@ def save_article():
         url = data.get("url")
 
         if not title or not url:
+
             return jsonify({
                 "error": "Title and URL are required"
             }), 400
@@ -192,6 +204,7 @@ def delete_article(article_id):
         connection.close()
 
         if deleted == 0:
+
             return jsonify({
                 "error": "Article not found"
             }), 404
@@ -212,7 +225,7 @@ def delete_article(article_id):
 
 
 # ==========================================
-# AI SUMMARY USING OLLAMA
+# AI SUMMARY USING GROQ
 # ==========================================
 
 @app.route("/api/summarize", methods=["POST"])
@@ -221,6 +234,7 @@ def summarize_article():
     data = request.get_json()
 
     if not data:
+
         return jsonify({
             "error": "No data received"
         }), 400
@@ -229,9 +243,23 @@ def summarize_article():
     content = data.get("content", "")
 
     if not content:
+
         return jsonify({
             "error": "Article content is required"
         }), 400
+
+    # Check API key
+    if not GROQ_API_KEY:
+
+        return jsonify({
+            "success": False,
+            "error": "GROQ_API_KEY is not configured on the server."
+        }), 500
+
+
+    # ==========================================
+    # SUMMARY PROMPT
+    # ==========================================
 
     prompt = f"""
 You are an AI reading assistant.
@@ -265,48 +293,108 @@ Article Content:
 {content}
 """
 
+
     try:
 
         response = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": False
+
+            GROQ_URL,
+
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json"
             },
+
+            json={
+
+                "model": GROQ_MODEL,
+
+                "messages": [
+
+                    {
+                        "role": "system",
+                        "content": "You are an AI reading assistant."
+                    },
+
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+
+                ],
+
+                "temperature": 0.3,
+
+                "max_tokens": 1500
+            },
+
             timeout=180
         )
+
 
         response.raise_for_status()
 
         result = response.json()
 
-        summary = result.get("response", "")
+        summary = result["choices"][0]["message"]["content"]
+
 
         return jsonify({
+
             "success": True,
+
             "summary": summary
+
         })
+
 
     except requests.exceptions.ConnectionError:
 
         return jsonify({
+
             "success": False,
-            "error": "Ollama is not running. Please start Ollama."
+
+            "error": "Could not connect to Groq AI."
+
         }), 500
+
+
+    except requests.exceptions.HTTPError as error:
+
+        print("GROQ HTTP ERROR:", error)
+
+        try:
+
+            error_details = response.json()
+
+        except Exception:
+
+            error_details = str(error)
+
+        return jsonify({
+
+            "success": False,
+
+            "error": f"Groq API error: {error_details}"
+
+        }), 500
+
 
     except Exception as error:
 
         print("AI SUMMARY ERROR:", error)
 
         return jsonify({
+
             "success": False,
+
             "error": str(error)
+
         }), 500
 
 
 # ==========================================
-# TEST OLLAMA AI
+# TEST GROQ AI
 # ==========================================
 
 @app.route("/api/test-ai", methods=["GET"])
@@ -314,35 +402,77 @@ def test_ai():
 
     try:
 
+        if not GROQ_API_KEY:
+
+            return jsonify({
+
+                "success": False,
+
+                "error": "GROQ_API_KEY is not configured."
+
+            }), 500
+
+
         response = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": OLLAMA_MODEL,
-                "prompt": "Say hello and confirm that the AI Reading Later project is connected to Ollama.",
-                "stream": False
+
+            GROQ_URL,
+
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json"
             },
+
+            json={
+
+                "model": GROQ_MODEL,
+
+                "messages": [
+
+                    {
+                        "role": "user",
+                        "content": "Say hello and confirm that the AI Reading Later project is connected to Groq AI."
+                    }
+
+                ],
+
+                "temperature": 0.2,
+
+                "max_tokens": 100
+            },
+
             timeout=60
         )
+
 
         response.raise_for_status()
 
         result = response.json()
 
+
         return jsonify({
+
             "success": True,
-            "message": result.get("response", "")
+
+            "message": result["choices"][0]["message"]["content"]
+
         })
+
 
     except Exception as error:
 
+        print("TEST AI ERROR:", error)
+
         return jsonify({
+
             "success": False,
+
             "error": str(error)
+
         }), 500
 
 
 # ==========================================
-# AI QUIZ GENERATION
+# AI QUIZ GENERATION USING GROQ
 # ==========================================
 
 @app.route("/api/quiz", methods=["POST"])
@@ -351,6 +481,7 @@ def generate_quiz():
     data = request.get_json()
 
     if not data:
+
         return jsonify({
             "error": "No data received"
         }), 400
@@ -359,9 +490,27 @@ def generate_quiz():
     content = data.get("content", "")
 
     if not content:
+
         return jsonify({
             "error": "Article content is required"
         }), 400
+
+
+    # Check API key
+    if not GROQ_API_KEY:
+
+        return jsonify({
+
+            "success": False,
+
+            "error": "GROQ_API_KEY is not configured on the server."
+
+        }), 500
+
+
+    # ==========================================
+    # QUIZ PROMPT
+    # ==========================================
 
     prompt = f"""
 You are an AI quiz generator.
@@ -389,6 +538,7 @@ Use this exact format:
 }}
 
 Rules:
+
 - Exactly 5 questions.
 - Exactly 4 options for every question.
 - "answer" must be 0, 1, 2, or 3.
@@ -407,58 +557,159 @@ Article Content:
 {content}
 """
 
+
     try:
 
         response = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": False,
-                "format": "json"
+
+            GROQ_URL,
+
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json"
             },
+
+            json={
+
+                "model": GROQ_MODEL,
+
+                "messages": [
+
+                    {
+                        "role": "system",
+                        "content": "You generate quizzes and return only valid JSON."
+                    },
+
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+
+                ],
+
+                "temperature": 0.2,
+
+                "max_tokens": 2000,
+
+                "response_format": {
+                    "type": "json_object"
+                }
+
+            },
+
             timeout=180
         )
+
 
         response.raise_for_status()
 
         result = response.json()
 
-        ai_response = result.get("response", "")
+        ai_response = result["choices"][0]["message"]["content"]
 
+
+        # Convert AI response into Python dictionary
         quiz_data = json.loads(ai_response)
 
         quiz = quiz_data.get("quiz", [])
 
+
         if len(quiz) == 0:
+
             raise Exception("No quiz questions generated")
 
+
+        # Validate quiz
+        if len(quiz) != 5:
+
+            raise Exception("AI did not generate exactly 5 questions")
+
+
+        for question in quiz:
+
+            if "question" not in question:
+
+                raise Exception("Invalid question format")
+
+            if "options" not in question:
+
+                raise Exception("Options missing")
+
+            if len(question["options"]) != 4:
+
+                raise Exception("Each question must have exactly 4 options")
+
+            if "answer" not in question:
+
+                raise Exception("Answer missing")
+
+            if question["answer"] not in [0, 1, 2, 3]:
+
+                raise Exception("Invalid answer index")
+
+
         return jsonify({
+
             "success": True,
+
             "quiz": quiz
+
         })
+
 
     except requests.exceptions.ConnectionError:
 
         return jsonify({
+
             "success": False,
-            "error": "Ollama is not running."
+
+            "error": "Could not connect to Groq AI."
+
         }), 500
+
+
+    except requests.exceptions.HTTPError as error:
+
+        print("GROQ QUIZ HTTP ERROR:", error)
+
+        try:
+
+            error_details = response.json()
+
+        except Exception:
+
+            error_details = str(error)
+
+        return jsonify({
+
+            "success": False,
+
+            "error": f"Groq API error: {error_details}"
+
+        }), 500
+
 
     except json.JSONDecodeError:
 
         return jsonify({
+
             "success": False,
+
             "error": "AI returned invalid quiz format. Please try again."
+
         }), 500
+
 
     except Exception as error:
 
         print("QUIZ ERROR:", error)
 
         return jsonify({
+
             "success": False,
+
             "error": str(error)
+
         }), 500
 
 
@@ -469,7 +720,11 @@ Article Content:
 if __name__ == "__main__":
 
     app.run(
+
         host="0.0.0.0",
-        port=5000,
-        debug=True
+
+        port=int(os.environ.get("PORT", 5000)),
+
+        debug=False
+
     )
