@@ -3,6 +3,7 @@ from flask_cors import CORS
 import sqlite3
 import requests
 import json
+import os
 
 # ==========================================
 # CREATE FLASK APP
@@ -22,7 +23,8 @@ OLLAMA_MODEL = "llama3.2"
 # DATABASE
 # ==========================================
 
-DATABASE = "articles.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE = os.path.join(BASE_DIR, "articles.db")
 
 
 def get_db_connection():
@@ -49,6 +51,15 @@ def init_db():
     connection.commit()
     connection.close()
 
+    print("Database initialized successfully.")
+    print("Database path:", DATABASE)
+
+
+# IMPORTANT:
+# Run database initialization when the Flask
+# application is imported by Gunicorn/Render.
+init_db()
+
 
 # ==========================================
 # HOME ROUTE
@@ -69,24 +80,35 @@ def home():
 @app.route("/api/articles", methods=["GET"])
 def get_articles():
 
-    connection = get_db_connection()
+    try:
 
-    articles = connection.execute(
-        "SELECT * FROM articles ORDER BY id DESC"
-    ).fetchall()
+        connection = get_db_connection()
 
-    connection.close()
+        articles = connection.execute(
+            "SELECT * FROM articles ORDER BY id DESC"
+        ).fetchall()
 
-    result = []
+        connection.close()
 
-    for article in articles:
-        result.append({
-            "id": article["id"],
-            "title": article["title"],
-            "url": article["url"]
-        })
+        result = []
 
-    return jsonify(result)
+        for article in articles:
+            result.append({
+                "id": article["id"],
+                "title": article["title"],
+                "url": article["url"]
+            })
+
+        return jsonify(result)
+
+    except Exception as error:
+
+        print("GET ARTICLES ERROR:", error)
+
+        return jsonify({
+            "success": False,
+            "error": str(error)
+        }), 500
 
 
 # ==========================================
@@ -96,43 +118,55 @@ def get_articles():
 @app.route("/api/articles", methods=["POST"])
 def save_article():
 
-    data = request.get_json()
+    try:
 
-    if not data:
+        data = request.get_json()
+
+        if not data:
+            return jsonify({
+                "error": "No data received"
+            }), 400
+
+        title = data.get("title")
+        url = data.get("url")
+
+        if not title or not url:
+            return jsonify({
+                "error": "Title and URL are required"
+            }), 400
+
+        connection = get_db_connection()
+
+        cursor = connection.execute(
+            """
+            INSERT INTO articles (title, url)
+            VALUES (?, ?)
+            """,
+            (title, url)
+        )
+
+        connection.commit()
+
+        article_id = cursor.lastrowid
+
+        connection.close()
+
         return jsonify({
-            "error": "No data received"
-        }), 400
+            "success": True,
+            "message": "Article saved successfully",
+            "id": article_id,
+            "title": title,
+            "url": url
+        }), 201
 
-    title = data.get("title")
-    url = data.get("url")
+    except Exception as error:
 
-    if not title or not url:
+        print("SAVE ARTICLE ERROR:", error)
+
         return jsonify({
-            "error": "Title and URL are required"
-        }), 400
-
-    connection = get_db_connection()
-
-    cursor = connection.execute(
-        """
-        INSERT INTO articles (title, url)
-        VALUES (?, ?)
-        """,
-        (title, url)
-    )
-
-    connection.commit()
-
-    article_id = cursor.lastrowid
-
-    connection.close()
-
-    return jsonify({
-        "message": "Article saved successfully",
-        "id": article_id,
-        "title": title,
-        "url": url
-    }), 201
+            "success": False,
+            "error": str(error)
+        }), 500
 
 
 # ==========================================
@@ -142,27 +176,39 @@ def save_article():
 @app.route("/api/articles/<int:article_id>", methods=["DELETE"])
 def delete_article(article_id):
 
-    connection = get_db_connection()
+    try:
 
-    cursor = connection.execute(
-        "DELETE FROM articles WHERE id = ?",
-        (article_id,)
-    )
+        connection = get_db_connection()
 
-    connection.commit()
+        cursor = connection.execute(
+            "DELETE FROM articles WHERE id = ?",
+            (article_id,)
+        )
 
-    deleted = cursor.rowcount
+        connection.commit()
 
-    connection.close()
+        deleted = cursor.rowcount
 
-    if deleted == 0:
+        connection.close()
+
+        if deleted == 0:
+            return jsonify({
+                "error": "Article not found"
+            }), 404
+
         return jsonify({
-            "error": "Article not found"
-        }), 404
+            "success": True,
+            "message": "Article deleted successfully"
+        })
 
-    return jsonify({
-        "message": "Article deleted successfully"
-    })
+    except Exception as error:
+
+        print("DELETE ARTICLE ERROR:", error)
+
+        return jsonify({
+            "success": False,
+            "error": str(error)
+        }), 500
 
 
 # ==========================================
@@ -422,9 +468,8 @@ Article Content:
 
 if __name__ == "__main__":
 
-    init_db()
-
     app.run(
-        debug=True,
-        port=5000
+        host="0.0.0.0",
+        port=5000,
+        debug=True
     )
