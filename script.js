@@ -3,7 +3,7 @@
 // ==========================================
 
 const API_BASE_URL =
-    "https://ai-reading-later.onrender.com";
+    "https://ai-reading-later-backend.onrender.com";
 
 
 // ==========================================
@@ -56,14 +56,13 @@ const averageScore =
     document.getElementById("averageScore");
 
 
+// ==========================================
 // QUIZ VARIABLES
+// ==========================================
 
 let currentQuiz = [];
-
 let currentQuestion = 0;
-
 let quizScore = 0;
-
 let quizCompleted = false;
 
 
@@ -80,7 +79,6 @@ async function loadArticles() {
                 `${API_BASE_URL}/api/articles`
             );
 
-
         if (!response.ok) {
 
             throw new Error(
@@ -89,10 +87,8 @@ async function loadArticles() {
 
         }
 
-
         const articles =
             await response.json();
-
 
         displayArticles(articles);
 
@@ -105,12 +101,9 @@ async function loadArticles() {
         console.error(error);
 
         articlesContainer.innerHTML =
-
             `
             <p class="empty-message">
-
                 ❌ Could not connect to backend.
-
             </p>
             `;
 
@@ -127,16 +120,12 @@ function displayArticles(articles) {
 
     articlesContainer.innerHTML = "";
 
-
     if (articles.length === 0) {
 
         articlesContainer.innerHTML =
-
             `
             <p class="empty-message">
-
                 📚 No articles saved yet.
-
             </p>
             `;
 
@@ -148,19 +137,15 @@ function displayArticles(articles) {
     articles.forEach(
         function(article) {
 
-
             const articleCard =
                 document.createElement("div");
-
 
             articleCard.className =
                 "article-card";
 
 
             articleCard.innerHTML =
-
                 `
-
                 <div class="article-info">
 
                     <h3>
@@ -185,7 +170,6 @@ function displayArticles(articles) {
                     🗑️ Delete
 
                 </button>
-
                 `;
 
 
@@ -218,7 +202,6 @@ function updateDashboard(articles) {
 saveArticleBtn.addEventListener(
     "click",
     async function() {
-
 
         const title =
             document
@@ -254,25 +237,18 @@ saveArticleBtn.addEventListener(
                 await fetch(
                     `${API_BASE_URL}/api/articles`,
                     {
-
                         method: "POST",
 
                         headers: {
-
                             "Content-Type":
                                 "application/json"
-
                         },
 
                         body:
                             JSON.stringify({
-
                                 title: title,
-
                                 url: url
-
                             })
-
                     }
                 );
 
@@ -350,9 +326,7 @@ async function deleteArticle(id) {
             await fetch(
                 `${API_BASE_URL}/api/articles/${id}`,
                 {
-
                     method: "DELETE"
-
                 }
             );
 
@@ -397,7 +371,6 @@ summarizeBtn.addEventListener(
     "click",
     async function() {
 
-
         const title =
             summaryTitle.value.trim();
 
@@ -427,7 +400,6 @@ summarizeBtn.addEventListener(
 
 
         summaryResult.innerHTML =
-
             `
             <div class="loading">
 
@@ -447,25 +419,18 @@ summarizeBtn.addEventListener(
                 await fetch(
                     `${API_BASE_URL}/api/summarize`,
                     {
-
                         method: "POST",
 
                         headers: {
-
                             "Content-Type":
                                 "application/json"
-
                         },
 
                         body:
                             JSON.stringify({
-
                                 title: title,
-
                                 content: content
-
                             })
-
                     }
                 );
 
@@ -488,7 +453,6 @@ summarizeBtn.addEventListener(
 
 
             summaryResult.innerHTML =
-
                 `
                 <div class="success-label">
 
@@ -512,13 +476,12 @@ summarizeBtn.addEventListener(
 
             console.error(error);
 
-
             summaryResult.innerHTML =
-
                 `
                 <div class="error-box">
 
                     ❌
+
                     <strong>
                         Could not generate summary
                     </strong>
@@ -537,8 +500,7 @@ summarizeBtn.addEventListener(
 
         finally {
 
-            summarizeBtn.disabled =
-                false;
+            summarizeBtn.disabled = false;
 
             summarizeBtn.textContent =
                 "✨ Summarize with AI";
@@ -556,7 +518,6 @@ summarizeBtn.addEventListener(
 generateQuizBtn.addEventListener(
     "click",
     async function() {
-
 
         const title =
             quizTitle.value.trim();
@@ -587,7 +548,6 @@ generateQuizBtn.addEventListener(
 
 
         quizResult.innerHTML =
-
             `
             <div class="loading">
 
@@ -607,25 +567,18 @@ generateQuizBtn.addEventListener(
                 await fetch(
                     `${API_BASE_URL}/api/quiz`,
                     {
-
                         method: "POST",
 
                         headers: {
-
                             "Content-Type":
                                 "application/json"
-
                         },
 
                         body:
                             JSON.stringify({
-
                                 title: title,
-
                                 content: content
-
                             })
-
                     }
                 );
 
@@ -660,7 +613,6 @@ generateQuizBtn.addEventListener(
 
             displayQuizQuestion();
 
-
         }
 
 
@@ -668,13 +620,12 @@ generateQuizBtn.addEventListener(
 
             console.error(error);
 
-
             quizResult.innerHTML =
-
                 `
                 <div class="error-box">
 
                     ❌
+
                     <strong>
                         Could not generate quiz
                     </strong>
@@ -693,8 +644,7 @@ generateQuizBtn.addEventListener(
 
         finally {
 
-            generateQuizBtn.disabled =
-                false;
+            generateQuizBtn.disabled = false;
 
             generateQuizBtn.textContent =
                 "🧠 Generate Quiz";
@@ -733,9 +683,7 @@ function displayQuizQuestion() {
     question.options.forEach(
         function(option, index) {
 
-
             optionsHTML +=
-
                 `
                 <button
                     class="quiz-option"
@@ -755,9 +703,7 @@ function displayQuizQuestion() {
 
 
     quizResult.innerHTML =
-
         `
-
         <div class="question-card">
 
             <p class="question-number">
@@ -786,7 +732,6 @@ function displayQuizQuestion() {
             </div>
 
         </div>
-
         `;
 
 }
@@ -824,6 +769,7 @@ function selectAnswer(selectedIndex) {
 
         quizScore++;
 
+
         optionButtons[
             selectedIndex
         ].classList.add(
@@ -831,6 +777,7 @@ function selectAnswer(selectedIndex) {
         );
 
     }
+
 
     else {
 
@@ -883,25 +830,27 @@ function showQuizResult() {
         );
 
 
-    quizzesCount.textContent = "1";
+    quizzesCount.textContent =
+        "1";
+
 
     averageScore.textContent =
         percentage + "%";
 
 
     quizResult.innerHTML =
-
         `
-
         <div class="quiz-final">
 
             <div class="quiz-trophy">
                 🏆
             </div>
 
+
             <h2>
                 Quiz Completed!
             </h2>
+
 
             <p class="final-score">
 
@@ -911,9 +860,11 @@ function showQuizResult() {
 
             </p>
 
+
             <p>
 
                 Your Score:
+
                 <strong>
                     ${percentage}%
                 </strong>
@@ -930,7 +881,6 @@ function showQuizResult() {
             </button>
 
         </div>
-
         `;
 
 }
