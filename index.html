@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>AI Reading Later</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- NAVIGATION -->
+
+    <header>
+
+        <div class="logo">
+            📚 AI Reading Later
+        </div>
+
+        <nav>
+
+            <a href="#home">Home</a>
+
+            <a href="#addArticle">Add Article</a>
+
+            <a href="#aiSummary">AI Summary</a>
+
+            <a href="#quiz">AI Quiz</a>
+
+            <a href="#savedArticles">My Articles</a>
+
+            <a href="#dashboard">Progress</a>
+
+        </nav>
+
+    </header>
+
+
+    <!-- HERO -->
+
+    <section class="hero" id="home">
+
+        <div class="hero-content">
+
+            <p class="hero-tag">
+                🤖 AI POWERED READING ASSISTANT
+            </p>
+
+            <h1>
+                Read Smarter.<br>
+                Learn Better.
+            </h1>
+
+            <p class="hero-description">
+
+                Save articles, summarize them with AI,
+                and test your knowledge with smart quizzes.
+
+            </p>
+
+            <button
+                class="primary-btn"
+                onclick="document.getElementById('addArticle').scrollIntoView({behavior:'smooth'})">
+
+                + Add Article
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- ADD ARTICLE -->
+
+    <section class="add-article" id="addArticle">
+
+        <div class="section-heading">
+
+            <span>📖</span>
+
+            <h2>
+                Add a New Article
+            </h2>
+
+            <p>
+                Save an article that you want to read later.
+            </p>
+
+        </div>
+
+
+        <div class="article-form">
+
+            <input
+                type="text"
+                id="articleTitle"
+                placeholder="Enter article title">
+
+
+            <input
+                type="url"
+                id="articleUrl"
+                placeholder="Paste article URL">
+
+
+            <button
+                id="saveArticleBtn"
+                class="primary-btn">
+
+                Save Article 📚
+
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- FEATURES -->
+
+    <section class="features">
+
+        <div class="card">
+
+            <div class="icon">
+                🔗
+            </div>
+
+            <h2>
+                Save Articles
+            </h2>
+
+            <p>
+                Save useful articles and learning
+                resources for later.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="icon">
+                🤖
+            </div>
+
+            <h2>
+                AI Summary
+            </h2>
+
+            <p>
+                Summarize long articles into
+                important points.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="icon">
+                🧠
+            </div>
+
+            <h2>
+                AI Quiz
+            </h2>
+
+            <p>
+                Test your understanding with
+                AI-generated questions.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- AI SUMMARY -->
+
+    <section
+        class="ai-summary"
+        id="aiSummary">
+
+        <div class="section-heading">
+
+            <span>🤖</span>
+
+            <h2>
+                AI Article Summarizer
+            </h2>
+
+            <p>
+                Paste your article and let Llama 3.2
+                summarize it for you.
+            </p>
+
+        </div>
+
+
+        <div class="summary-box">
+
+            <input
+                type="text"
+                id="summaryTitle"
+                placeholder="Enter article title">
+
+
+            <textarea
+                id="articleContent"
+                rows="12"
+                placeholder="Paste article content here..."></textarea>
+
+
+            <button
+                id="summarizeBtn"
+                class="ai-btn">
+
+                ✨ Summarize with AI
+
+            </button>
+
+
+            <div
+                id="summaryResult"
+                class="summary-result">
+
+                <p class="placeholder-text">
+
+                    Your AI-generated summary
+                    will appear here.
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- AI QUIZ -->
+
+    <section
+        class="quiz-section"
+        id="quiz">
+
+        <div class="section-heading">
+
+            <span>🧠</span>
+
+            <h2>
+                AI Quiz
+            </h2>
+
+            <p>
+                Test your understanding of the article.
+            </p>
+
+        </div>
+
+
+        <div class="quiz-box">
+
+            <input
+                type="text"
+                id="quizTitle"
+                placeholder="Enter article title">
+
+
+            <textarea
+                id="quizContent"
+                rows="10"
+                placeholder="Paste article content here..."></textarea>
+
+
+            <button
+                id="generateQuizBtn"
+                class="ai-btn">
+
+                🧠 Generate Quiz
+
+            </button>
+
+
+            <div
+                id="quizResult"
+                class="quiz-result">
+
+                <p class="placeholder-text">
+
+                    Your AI-generated quiz
+                    will appear here.
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- SAVED ARTICLES -->
+
+    <section
+        class="saved-articles"
+        id="savedArticles">
+
+        <div class="section-heading">
+
+            <span>📚</span>
+
+            <h2>
+                My Saved Articles
+            </h2>
+
+            <p>
+                Your saved reading resources.
+            </p>
+
+        </div>
+
+
+        <div id="articlesContainer">
+
+            <p class="empty-message">
+                Loading articles...
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- DASHBOARD -->
+
+    <section
+        class="dashboard"
+        id="dashboard">
+
+        <div class="section-heading">
+
+            <span>📊</span>
+
+            <h2>
+                Your Learning Dashboard
+            </h2>
+
+        </div>
+
+
+        <div class="stats">
+
+
+            <div class="stat">
+
+                <div class="stat-icon">
+                    📚
+                </div>
+
+                <h3 id="articlesCount">
+                    0
+                </h3>
+
+                <p>
+                    Articles Saved
+                </p>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-icon">
+                    🧠
+                </div>
+
+                <h3 id="quizzesCount">
+                    0
+                </h3>
+
+                <p>
+                    Quizzes Taken
+                </p>
+
+            </div>
+
+
+            <div class="stat">
+
+                <div class="stat-icon">
+                    ⭐
+                </div>
+
+                <h3 id="averageScore">
+                    0%
+                </h3>
+
+                <p>
+                    Average Score
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- FOOTER -->
+
+    <footer>
+
+        <p>
+            🤖 AI Reading Later © 2026
+        </p>
+
+        <p>
+            Powered by Ollama + Llama 3.2
+        </p>
+
+    </footer>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
